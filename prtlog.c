@@ -25,6 +25,15 @@
 #define ETH_TYPE_PPOE   0x8864      /*PPP Over Ethernet Session Stage*/
 #define ETH_TYPE_LOOPBACK   0x9000  /*used to test interfaces*/
 
+/*
+ * ARP operations
+ */
+
+#define ARP_OP_REQUEST          1       /*request to resolve ha given pa*/
+#define ARP_OP_REPLY            2       /*response giving hardware address*/
+#define ARP_OP_REVREQUEST       3       /*request to resolve pa given ha*/
+#define ARP_OP_REVREPLY         4       /*response giving protocol address*/
+
 struct timev{
     unsigned int tv_sec;
     unsigned int tv_usec;
@@ -36,20 +45,22 @@ struct my_pkthdr{
     int len;
 };
 
+void printGlobalHeader(struct pcap_file_header *pcapHdr);
+void printEtherType(int fd, int packetHeaderLen, int *dataBuf, struct eth_hdr *my_EtherHdr, struct ip_hdr *my_IpHdr, struct arp_hdr *my_ArpHdr);
 
 int main(int argc, char* argv[]) {
 
-    // struct to hold individual packet data
-    struct my_pkthdr myStruct;
 
-    //packet count
-    int pnum = 0;
 
-    //Global header buffer
-    int x[24];
+    struct pcap_file_header pcapHdr;
+    struct my_pkthdr my_PacketHdr;
+    struct eth_hdr my_EtherHdr;
+    struct arp_hdr my_ArpHdr;
+    struct ip_hdr my_IpHdr;
 
-    //Packet data buffer
-    int buf[65535];
+    int pktNum = 0;
+    int dataBuf[65535];
+    int bytesRead = 1;
 
     //used to calculate packet times
     unsigned static int firstTime = 1;
@@ -58,46 +69,30 @@ int main(int argc, char* argv[]) {
     static int c_usec = 0;
     unsigned static int c_sec = 0;
 
-    //used to hold packet header times
-    struct my_pkthdr phdr;
-    struct pcap_file_header pcapHdr;
-    struct eth_hdr etherHdr;
-
+    char * x = "C:\\Users\\odiep\\CLionProjects\\cs3423Assign6\\network.nonip.log";
     //open file descriptor for binary file
-    int fd = open(argv[1], O_RDONLY);
+    int fd = open(x, O_RDONLY);
     if (fd == -1)
     {
         perror("Failed to open file\n");
+        exit(-1);
     }
-    //Remove global header
+
     read(fd, &pcapHdr, sizeof(pcapHdr));
-    printf("PCAP_MAGIC\n");
-    printf("Version major number = %d\n", pcapHdr.version_major);
-    printf("Version minor number = %d\n", pcapHdr.version_minor);
-    printf("GMT to local correction = %d\n", pcapHdr.thiszone);
-    printf("Timestamp accuracy = %d\n", pcapHdr.sigfigs);
-    printf("Snaplen = %d\n", pcapHdr.snaplen);
-    printf("Linktype = %d\n\n", pcapHdr.linktype);
+    printGlobalHeader(&pcapHdr);
 
-
-    int bytesread = 1;
-    while(  (bytesread = read(fd,&myStruct, sizeof(myStruct))) > 0 ) {
-
-        if (bytesread == -1)
-        {
-            perror("Failed to read from buffer\n");
-        }
+    while((bytesRead = read(fd, &my_PacketHdr, sizeof(my_PacketHdr)) ) > 0 ) {
 
         if (firstTime)
         {
             firstTime = 0;
 
-            b_sec = myStruct.ts.tv_sec;
-            b_usec = myStruct.ts.tv_usec;
+            b_sec = my_PacketHdr.ts.tv_sec;
+            b_usec = my_PacketHdr.ts.tv_usec;
         }
 
-        c_sec = (unsigned)myStruct.ts.tv_sec - b_sec;
-        c_usec = (unsigned)myStruct.ts.tv_usec - b_usec;
+        c_sec = (unsigned)my_PacketHdr.ts.tv_sec - b_sec;
+        c_usec = (unsigned)my_PacketHdr.ts.tv_usec - b_usec;
 
         while(c_usec < 0)
         {
@@ -105,34 +100,190 @@ int main(int argc, char* argv[]) {
             c_sec--;
         }
 
-        printf("Packet %d\n", pnum++);
+        printf("Packet %d\n", pktNum++);
         printf("%05u.%06u\n",(unsigned)c_sec, (unsigned)c_usec);
-        printf("Captured Packet Length = %d\n", myStruct.caplen);
-        printf("Actual Packet Length = %d\n", myStruct.len);
+        printf("Captured Packet Length = %d\n", my_PacketHdr.caplen);
+        printf("Actual Packet Length = %d\n", my_PacketHdr.len);
+        printf("Ethernet Header\n");
 
-        read(fd, &etherHdr, sizeof(etherHdr));
-
-        if (ntohs (etherHdr.eth_type) == ETH_TYPE_IP)
+        if ((read(fd, &my_EtherHdr, sizeof(my_EtherHdr))) == -1)
         {
-            printf("Ethernet type hex:%x dec:%d is an IP packet\n",
-                   ntohs(etherHdr.eth_type),
-                   ntohs(etherHdr.eth_type));
-        }else  if (ntohs (etherHdr.eth_type) == ETH_TYPE_ARP)
-        {
-            printf("Ethernet type hex:%x dec:%d is an ARP packet\n",
-                   ntohs(etherHdr.eth_type),
-                   ntohs(etherHdr.eth_type));
-        }else {
-            printf("Ethernet type %x not IP", ntohs(etherHdr.eth_type));
-            exit(1);
+            perror("Read from file descriptor to Ethernet Header Struct failed");
+            exit(-1);
         }
 
+        int packetHeaderLen = my_PacketHdr.len;
+         printEtherType(fd, packetHeaderLen, dataBuf, &my_EtherHdr, &my_IpHdr, &my_ArpHdr);
+//         if (ntohs (my_EtherHdr.eth_type) == ETH_TYPE_IP)
+//        {
+//            printf("   IP\n");
+//
+//            if ((read(fd, &my_IpHdr, sizeof(my_IpHdr))) == -1)
+//            {
+//                perror("Read from file descriptor to IP Header Struct failed");
+//                exit(-1);
+//            }
+//
+//            switch (my_IpHdr.ip_p) {
+//                case 1:
+//                    printf("      ICMP\n");
+//                    break;
+//                case 2:
+//                    printf("      IGMP\n");
+//                    break;
+//                case 6:
+//                    printf("      TCP\n");
+//                    break;
+//                case 17:
+//                    printf("      UDP\n");
+//                    break;
+//                default:
+//                    printf("URECOGNIZED\n");
+//                    break;
+//            }
+//
+//            printf("\n");
+//
+//            if ((read(fd, dataBuf, packetHeaderLen - sizeof(my_EtherHdr) - sizeof(my_IpHdr)) == -1))
+//            {
+//                perror("Read from file descriptor to dataBuffer failed");
+//                exit(-1);
+//            }
+//
+//        }
+//        else if (ntohs (my_EtherHdr.eth_type) == ETH_TYPE_ARP)
+//        {
+//            printf("   ARP\n");
+//
+//            if ((read(fd, &my_ArpHdr, sizeof(my_ArpHdr)) == -1))
+//            {
+//                perror("Read from file descriptor to ARP Header struct failed");
+//                exit(-1);
+//            }
+//
+//            switch (ntohs(my_ArpHdr.ar_op)) {
+//                case 1:
+//                    printf("      Arp Reply\n");
+//                    break;
+//                case 2:
+//                    printf("      Arp Request\n");
+//                    break;
+//                case 3:
+//                    printf("      Arp RevRequest\n");
+//                    break;
+//                case 4:
+//                    printf("      Arp RevReply\n");
+//                    break;
+//                default:
+//                    printf("URECOGNIZED\n");
+//                    break;
+//            }
+//            printf("\n");
+//
+//            read(fd, dataBuf, packetHeaderLen - sizeof(my_EtherHdr) - sizeof(my_ArpHdr));
+//        } else
+//        {
+//            printf("URECOGNIZED\n");
+//            printf("\n");
+//            read(fd, dataBuf, packetHeaderLen - sizeof(my_EtherHdr));
+//        }
 
-        printf("\n\n");
-
-        read(fd, buf, myStruct.caplen);
     }
 
+    if(bytesRead == -1)
+    {
+        perror("Failed to read into Packet Header Struct\n");
+        exit(-1);
+    }
 
     return 0;
+}
+
+
+void printGlobalHeader(struct pcap_file_header *pcapHdr) {
+    //print out all global header info
+    printf("PCAP_MAGIC\n");
+    printf("Version major number = %d\n", pcapHdr->version_major);
+    printf("Version minor number = %d\n", pcapHdr->version_minor);
+    printf("GMT to local correction = %d\n", pcapHdr->thiszone);
+    printf("Timestamp accuracy = %d\n", pcapHdr->sigfigs);
+    printf("Snaplen = %d\n", pcapHdr->snaplen);
+    printf("Linktype = %d\n\n", pcapHdr->linktype);
+}
+
+void printEtherType(int fd, int packetHeaderLen, int *dataBuf, struct eth_hdr *my_EtherHdr, struct ip_hdr *my_IpHdr, struct arp_hdr *my_ArpHdr)
+{
+    if (ntohs (my_EtherHdr->eth_type) == ETH_TYPE_IP)
+        {
+            printf("   IP\n");
+
+            if ((read(fd, &my_IpHdr, sizeof(my_IpHdr))) == -1)
+            {
+                perror("Read from file descriptor to IP Header Struct failed");
+                exit(-1);
+            }
+
+            switch (my_IpHdr->ip_p) {
+                case 1:
+                    printf("      ICMP\n");
+                    break;
+                case 2:
+                    printf("      IGMP\n");
+                    break;
+                case 6:
+                    printf("      TCP\n");
+                    break;
+                case 17:
+                    printf("      UDP\n");
+                    break;
+                default:
+                    printf("URECOGNIZED\n");
+                    break;
+            }
+
+            printf("\n");
+
+            if ((read(fd, dataBuf, packetHeaderLen - sizeof(my_EtherHdr) - sizeof(my_IpHdr)) == -1))
+            {
+                perror("Read from file descriptor to dataBuffer failed");
+                exit(-1);
+            }
+
+        }
+        else if (ntohs (my_EtherHdr->eth_type) == ETH_TYPE_ARP)
+        {
+            printf("   ARP\n");
+
+            if ((read(fd, &my_ArpHdr, sizeof(my_ArpHdr)) == -1))
+            {
+                perror("Read from file descriptor to ARP Header struct failed");
+                exit(-1);
+            }
+
+            switch (ntohs(my_ArpHdr->ar_op)) {
+                case 1:
+                    printf("      Arp Reply\n");
+                    break;
+                case 2:
+                    printf("      Arp Request\n");
+                    break;
+                case 3:
+                    printf("      Arp RevRequest\n");
+                    break;
+                case 4:
+                    printf("      Arp RevReply\n");
+                    break;
+                default:
+                    printf("URECOGNIZED\n");
+                    break;
+            }
+            printf("\n");
+
+            read(fd, dataBuf, packetHeaderLen - sizeof(my_EtherHdr) - sizeof(my_ArpHdr));
+        } else
+        {
+            printf("URECOGNIZED\n");
+            printf("\n");
+            read(fd, dataBuf, packetHeaderLen - sizeof(my_EtherHdr));
+        }
 }
