@@ -63,6 +63,7 @@ int main(int argc, char* argv[]) {
     struct ip_hdr my_IpHdr;
 
     int fd = 0;
+    int pktNum = 0;
     int dataBuf[65535];
     int bytesRead = 1;
     bool flag = true;
@@ -78,9 +79,8 @@ int main(int argc, char* argv[]) {
     //open file descriptor for binary file
     //int fd = open(x, O_RDONLY);
 
-    for(int i = 1; i < argc; i++)
+    for(int i = 0; i < argc; i++)
     {
-        int pktNum = 0;
         fd = open(argv[i], O_RDONLY);
         if (fd == -1)
         {

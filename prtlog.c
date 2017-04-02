@@ -111,9 +111,6 @@ int main(int argc, char* argv[]) {
             perror("Read from file descriptor to Ethernet Header Struct failed");
             exit(-1);
         }
-
-        int packetHeaderLen = my_PacketHdr.len;
-         //printEtherType(fd, packetHeaderLehn, dataBuf, &my_EtherHdr, &my_IpHdr, &my_ArpHdr);
          if (ntohs (my_EtherHdr.eth_type) == ETH_TYPE_IP)
         {
             printf("   IP\n");
