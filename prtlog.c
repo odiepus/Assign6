@@ -10,14 +10,6 @@
 #include "dnet.h"
 #include "prtlog.h"
 
-typedef enum {false, true} bool;
-
-void printGlobalHeader(struct pcap_file_header *pcapHdr);
-struct pcap_file_header getGlobalHeader(int fd);
-bool getPacketHeader(int fd, struct my_pkthdr *my_PacketHdr);
-void savePayload(int fd, int *dataBuf, int len);
-void printPacketHdr(struct my_pkthdr *my_PacketHdr);
-int printEtherData(int fd);
 
 
 int main(int argc, char* argv[]) {
@@ -28,13 +20,20 @@ int main(int argc, char* argv[]) {
     int fd = 0;
     int dataBuf[65535];
 
+    if(argc == 1)
+    {
+        printf("Usage: %s [file1] [file2] [file3] ...\n", argv[0]);
+        printf("Please input at least one file\n");
+        exit(-1);
+    }
+
     for(int i = 1; i < argc; i++)
     {
         int pktNum = 0;
         fd = open(argv[i], O_RDONLY);
         if (fd == -1)
         {
-            printf("Usage: %s [file1] [file2] [file3] ...", argv[0]);
+            printf("Usage: %s [file1] [file2] [file3] ...\n", argv[0]);
             perror("Failed to open file\n");
             exit(-1);
         }

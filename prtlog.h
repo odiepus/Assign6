@@ -28,6 +28,7 @@
 #define PCAP_MODIFIED_MAGIC         0xa1b2cd34
 #define PCAP_SWAPPED_MODIFIED_MAGIC 0x34cdb2a1
 
+typedef enum {false, true} bool;
 
 struct timev{
     unsigned int tv_sec;

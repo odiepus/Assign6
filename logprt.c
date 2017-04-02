@@ -30,6 +30,13 @@ int main(int argc, char* argv[]) {
     static int c_usec = 0;
     unsigned static int c_sec = 0;
 
+    if(argc == 1)
+    {
+        printf("Usage: %s [file1] [file2] [file3] ...\n", argv[0]);
+        printf("Please input at least one file\n");
+        exit(-1);
+    }
+
     for(int i = 1; i < argc; i++)
     {
         //open file descriptor for binary file
