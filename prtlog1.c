@@ -74,6 +74,8 @@ int main(int argc, char* argv[]) {
     static int c_usec = 0;
     unsigned static int c_sec = 0;
 
+    printf("%ld\n", sizeof(my_PacketHdr));
+
     //char *x = "network.nonip.log";
     //open file descriptor for binary file
     //int fd = open(x, O_RDONLY);
