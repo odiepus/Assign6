@@ -211,7 +211,7 @@ int printEtherData(int fd)
     }
     else
     {
-        printf("URECOGNIZED\n");
+        printf("UNRECOGNIZED\n");
         printf("\n");
         return sizeof(my_EtherHdr);
     }

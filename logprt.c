@@ -9,7 +9,6 @@
 #include "logprt.h"
 
 
-
 int main(int argc, char* argv[]) {
 
     // struct to hold individual packet data
@@ -37,10 +36,14 @@ int main(int argc, char* argv[]) {
         int fd = open(argv[i], O_RDONLY);
         if (fd == -1)
         {
-            perror("Failed to open file\n");
+            perror("Failed to open file\nUsage: %s [file1] [file2] ...\n");
+            exit(-1);
         }
         //Remove global header
         read(fd, x, sizeof(x));
+
+        //packet count
+        int pnum = 0;
 
         int bytesread = 1;
         while(  (bytesread = read(fd, &myPhdr, sizeof(myPhdr))) > 0 ) {
@@ -67,12 +70,17 @@ int main(int argc, char* argv[]) {
             }
 
             printf("%05u.%06u\n",(unsigned)c_sec, (unsigned)c_usec);
-            read(fd, buf, myPhdr.caplen);
+            if((read(fd, buf, myPhdr.caplen)) == -1)
+            {
+                perror("Failed to read from file descriptor to data buffer\n");
+                exit(-1);
+            }
         }
 
         if (bytesread == -1)
         {
-            perror("Failed to read file\n");
+            perror("Failed to read file descriptor to Packet Header struct\n");
+            exit(-1);
         }
     }
 
