@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
     static int c_usec = 0;
     unsigned static int c_sec = 0;
 
-    char * x = "C:\\Users\\odiep\\CLionProjects\\cs3423Assign6\\network.nonip.log";
+    char *x = "network.nonip.log";
     //open file descriptor for binary file
     int fd = open(x, O_RDONLY);
     if (fd == -1)
@@ -113,80 +113,80 @@ int main(int argc, char* argv[]) {
         }
 
         int packetHeaderLen = my_PacketHdr.len;
-         printEtherType(fd, packetHeaderLen, dataBuf, &my_EtherHdr, &my_IpHdr, &my_ArpHdr);
-//         if (ntohs (my_EtherHdr.eth_type) == ETH_TYPE_IP)
-//        {
-//            printf("   IP\n");
-//
-//            if ((read(fd, &my_IpHdr, sizeof(my_IpHdr))) == -1)
-//            {
-//                perror("Read from file descriptor to IP Header Struct failed");
-//                exit(-1);
-//            }
-//
-//            switch (my_IpHdr.ip_p) {
-//                case 1:
-//                    printf("      ICMP\n");
-//                    break;
-//                case 2:
-//                    printf("      IGMP\n");
-//                    break;
-//                case 6:
-//                    printf("      TCP\n");
-//                    break;
-//                case 17:
-//                    printf("      UDP\n");
-//                    break;
-//                default:
-//                    printf("URECOGNIZED\n");
-//                    break;
-//            }
-//
-//            printf("\n");
-//
-//            if ((read(fd, dataBuf, packetHeaderLen - sizeof(my_EtherHdr) - sizeof(my_IpHdr)) == -1))
-//            {
-//                perror("Read from file descriptor to dataBuffer failed");
-//                exit(-1);
-//            }
-//
-//        }
-//        else if (ntohs (my_EtherHdr.eth_type) == ETH_TYPE_ARP)
-//        {
-//            printf("   ARP\n");
-//
-//            if ((read(fd, &my_ArpHdr, sizeof(my_ArpHdr)) == -1))
-//            {
-//                perror("Read from file descriptor to ARP Header struct failed");
-//                exit(-1);
-//            }
-//
-//            switch (ntohs(my_ArpHdr.ar_op)) {
-//                case 1:
-//                    printf("      Arp Reply\n");
-//                    break;
-//                case 2:
-//                    printf("      Arp Request\n");
-//                    break;
-//                case 3:
-//                    printf("      Arp RevRequest\n");
-//                    break;
-//                case 4:
-//                    printf("      Arp RevReply\n");
-//                    break;
-//                default:
-//                    printf("URECOGNIZED\n");
-//                    break;
-//            }
-//            printf("\n");
-//
-//            read(fd, dataBuf, packetHeaderLen - sizeof(my_EtherHdr) - sizeof(my_ArpHdr));
-//        } else
-//        {
-//            printf("URECOGNIZED\n");
-//            printf("\n");
-//            read(fd, dataBuf, packetHeaderLen - sizeof(my_EtherHdr));
-//        }
+         //printEtherType(fd, packetHeaderLehn, dataBuf, &my_EtherHdr, &my_IpHdr, &my_ArpHdr);
+         if (ntohs (my_EtherHdr.eth_type) == ETH_TYPE_IP)
+        {
+            printf("   IP\n");
+
+           if ((read(fd, &my_IpHdr, sizeof(my_IpHdr))) == -1)
+           {
+               perror("Read from file descriptor to IP Header Struct failed");
+               exit(-1);
+           }
+
+           switch (my_IpHdr.ip_p) {
+               case 1:
+                   printf("      ICMP\n");
+                   break;
+               case 2:
+                   printf("      IGMP\n");
+                   break;
+               case 6:
+                   printf("      TCP\n");
+                   break;
+               case 17:
+                   printf("      UDP\n");
+                   break;
+               default:
+                   printf("URECOGNIZED\n");
+                   break;
+           }
+
+           printf("\n");
+
+           if ((read(fd, dataBuf, packetHeaderLen - sizeof(my_EtherHdr) - sizeof(my_IpHdr)) == -1))
+           {
+               perror("Read from file descriptor to dataBuffer failed");
+               exit(-1);
+           }
+
+       }
+       else if (ntohs (my_EtherHdr.eth_type) == ETH_TYPE_ARP)
+       {
+           printf("   ARP\n");
+
+           if ((read(fd, &my_ArpHdr, sizeof(my_ArpHdr)) == -1))
+           {
+               perror("Read from file descriptor to ARP Header struct failed");
+               exit(-1);
+           }
+
+           switch (ntohs(my_ArpHdr.ar_op)) {
+               case 1:
+                   printf("      Arp Reply\n");
+                   break;
+               case 2:
+                   printf("      Arp Request\n");
+                   break;
+               case 3:
+                   printf("      Arp RevRequest\n");
+                   break;
+               case 4:
+                   printf("      Arp RevReply\n");
+                   break;
+               default:
+                   printf("URECOGNIZED\n");
+                   break;
+           }
+           printf("\n");
+
+           read(fd, dataBuf, packetHeaderLen - sizeof(my_EtherHdr) - sizeof(my_ArpHdr));
+       } else
+       {
+           printf("URECOGNIZED\n");
+           printf("\n");
+           read(fd, dataBuf, packetHeaderLen - sizeof(my_EtherHdr));
+       }
 
     }
 
