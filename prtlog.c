@@ -34,6 +34,7 @@ int main(int argc, char* argv[]) {
         fd = open(argv[i], O_RDONLY);
         if (fd == -1)
         {
+            printf("Usage: %s [file1] [file2] [file3] ...", argv[0]);
             perror("Failed to open file\n");
             exit(-1);
         }
@@ -103,6 +104,7 @@ void savePayload(int fd, int *dataBuf, int len)
     if((read(fd, dataBuf, len)) == -1)
     {
         perror("Failed to read from binary file to data buffer\n");
+        exit(-1);
     }
 }
 

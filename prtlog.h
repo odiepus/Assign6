@@ -40,5 +40,34 @@ struct my_pkthdr{
     int len;
 };
 
+//pass by reference the pcap header struct to function and print out the info
+void printGlobalHeader(struct pcap_file_header *pcapHdr);
+
+//create global header struct in function populate it from file
+//then return the struct
+struct pcap_file_header getGlobalHeader(int fd);
+
+//pull packet header from file descriptor and point passed in
+//struct to it
+bool getPacketHeader(int fd, struct my_pkthdr *my_PacketHdr);
+
+/*given length of headers that have been removed from file descriptor
+* the difference between the caplen and removed headers is used to
+*put the payload into the data buffer
+*/
+void savePayload(int fd, int *dataBuf, int len);
+
+/* pass by reference the packet header struct and
+ * print out the information contained within to
+ * stdout
+ */
+void printPacketHdr(struct my_pkthdr *my_PacketHdr);
+
+/*create ehternet headers inside function then based on
+ * on ethernet type an ip or arp struct is created and populated.
+ * The information is then printed out to stdout
+ */
+int printEtherData(int fd);
+
 
 #endif
