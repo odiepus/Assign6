@@ -10,7 +10,6 @@
 #include "dnet.h"
 #include "prtlog.h"
 
-
 typedef enum {false, true} bool;
 
 void printGlobalHeader(struct pcap_file_header *pcapHdr);
@@ -25,27 +24,9 @@ int main(int argc, char* argv[]) {
 
     struct pcap_file_header pcapHdr;
     struct my_pkthdr my_PacketHdr;
-    struct eth_hdr my_EtherHdr;
-    struct arp_hdr my_ArpHdr;
-    struct ip_hdr my_IpHdr;
 
     int fd = 0;
     int dataBuf[65535];
-    int bytesRead = 1;
-    bool flag = true;
-
-    //used to calculate packet times
-    unsigned static int firstTime = 1;
-    unsigned static int b_sec = 0;
-    static int b_usec = 0;
-    static int c_usec = 0;
-    unsigned static int c_sec = 0;
-
-    printf("%ld\n", sizeof(my_PacketHdr));
-
-    //char *x = "network.nonip.log";
-    //open file descriptor for binary file
-    //int fd = open(x, O_RDONLY);
 
     for(int i = 1; i < argc; i++)
     {
@@ -56,7 +37,6 @@ int main(int argc, char* argv[]) {
             perror("Failed to open file\n");
             exit(-1);
         }
-
 
         pcapHdr = getGlobalHeader(fd);
         printGlobalHeader(&pcapHdr);
@@ -70,9 +50,7 @@ int main(int argc, char* argv[]) {
             savePayload(fd, dataBuf, dataLen - lengthRead);
         }
     }
-
     return 0;
-
 }
 
 
@@ -140,7 +118,6 @@ void printPacketHdr(struct my_pkthdr *my_PacketHdr)
     if (firstTime)
     {
         firstTime = 0;
-
         b_sec = my_PacketHdr->ts.tv_sec;
         b_usec = my_PacketHdr->ts.tv_usec;
     }
@@ -170,71 +147,72 @@ int printEtherData(int fd)
         perror("Read from file descriptor to Ethernet Header Struct failed");
         exit(-1);
     }
-     if (ntohs (my_EtherHdr.eth_type) == ETH_TYPE_IP)
+    if (ntohs (my_EtherHdr.eth_type) == ETH_TYPE_IP)
     {
         printf("   IP\n");
 
-       if ((read(fd, &my_IpHdr, sizeof(my_IpHdr))) == -1)
-       {
-           perror("Read from file descriptor to IP Header Struct failed");
-           exit(-1);
-       }
+        if ((read(fd, &my_IpHdr, sizeof(my_IpHdr))) == -1)
+        {
+            perror("Read from file descriptor to IP Header Struct failed");
+            exit(-1);
+        }
 
-       switch (my_IpHdr.ip_p) {
-           case 1:
-               printf("      ICMP\n");
-               break;
-           case 2:
-               printf("      IGMP\n");
-               break;
-           case 6:
-               printf("      TCP\n");
-               break;
-           case 17:
-               printf("      UDP\n");
-               break;
-           default:
-               printf("URECOGNIZED\n");
-               break;
+        switch (my_IpHdr.ip_p) {
+            case 1:
+                printf("      ICMP\n");
+            break;
+            case 2:
+                printf("      IGMP\n");
+            break;
+            case 6:
+                printf("      TCP\n");
+            break;
+            case 17:
+                printf("      UDP\n");
+            break;
+            default:
+                printf("UNRECOGNIZED\n");
+            break;
         }
 
         printf("\n");
         return sizeof(my_EtherHdr) + sizeof(my_IpHdr);
-   }
-   else if (ntohs (my_EtherHdr.eth_type) == ETH_TYPE_ARP)
-   {
-       printf("   ARP\n");
+    }
+    else if (ntohs (my_EtherHdr.eth_type) == ETH_TYPE_ARP)
+    {
+        printf("   ARP\n");
 
-       if ((read(fd, &my_ArpHdr, sizeof(my_ArpHdr)) == -1))
-       {
-           perror("Read from file descriptor to ARP Header struct failed");
-           exit(-1);
-       }
+        if ((read(fd, &my_ArpHdr, sizeof(my_ArpHdr)) == -1))
+        {
+            perror("Read from file descriptor to ARP Header struct failed");
+            exit(-1);
+        }
 
-       switch (ntohs(my_ArpHdr.ar_op)) {
-           case 1:
-               printf("      Arp Reply\n");
-               break;
-           case 2:
-               printf("      Arp Request\n");
-               break;
-           case 3:
-               printf("      Arp RevRequest\n");
-               break;
-           case 4:
-               printf("      Arp RevReply\n");
-               break;
-           default:
-               printf("URECOGNIZED\n");
-               break;
-       }
-       printf("\n");
+        switch (ntohs(my_ArpHdr.ar_op)) {
+            case 1:
+                printf("      Arp Reply\n");
+            break;
+            case 2:
+                printf("      Arp Request\n");
+            break;
+            case 3:
+                printf("      Arp RevRequest\n");
+            break;
+            case 4:
+                printf("      Arp RevReply\n");
+            break;
+            default:
+                printf("UNRECOGNIZED\n");
+            break;
+        }
+        printf("\n");
 
         return sizeof(my_EtherHdr) + sizeof(my_ArpHdr);
-   } else
-   {
-       printf("URECOGNIZED\n");
-       printf("\n");
+    }
+    else
+    {
+        printf("URECOGNIZED\n");
+        printf("\n");
         return sizeof(my_EtherHdr);
-   }
+    }
 }
